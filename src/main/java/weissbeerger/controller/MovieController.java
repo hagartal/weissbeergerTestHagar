@@ -1,6 +1,5 @@
 package weissbeerger.controller;
 
-import com.google.gson.Gson;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
@@ -8,14 +7,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.client.RestTemplate;
 import weissbeerger.entity.TypeToSend;
 import weissbeerger.utils.CreateXml;
-import weissbeerger.entity.Movie;
-import weissbeerger.entity.Search;
 import weissbeerger.utils.OmdbClient;
 
-import javax.xml.bind.JAXBException;
 import java.io.File;
 
 @Controller
@@ -26,6 +21,9 @@ public class MovieController {
 
     @Autowired
     OmdbClient omdbClient;
+
+    @Autowired
+    CreateXml createXml;
 
 
     @GetMapping(value = "/getMovie")
@@ -38,21 +36,15 @@ public class MovieController {
             , @RequestParam(name = "v", required = false) String v
             , @RequestParam(name = "page", required = false) String page) {
 
-        if(!omdbClient.inputValidation(name, typeToSend, type, y, plot, callback, v, page)){
+        if (!omdbClient.inputValidation(name, typeToSend, type, y, plot, callback, v, page)) {
             return new ResponseEntity<String>("Invalid input", HttpStatus.BAD_REQUEST);
         }
         String fileName = env.getProperty("path.for.file") + name + ".xml";
-        File file = new File(fileName);
-        if (file.exists() && !file.isDirectory()) {
-            return new ResponseEntity<String>("Success", HttpStatus.CREATED);
-        } else {
-            return omdbClient.getMovieFromSite(name, fileName, TypeToSend.valueOf(typeToSend), type, y, plot, callback, v, page);
-
+        if (!typeToSend.equals("s") && createXml.fileExists(fileName)) {
+            return new ResponseEntity<String>("Success - we have this movie allready in the file system", HttpStatus.CREATED);
         }
+        //we don't have this movie in the file system - we will search it in omdb API.
+        return omdbClient.getMovieFromSiteAndCreateXml(name, TypeToSend.valueOf(typeToSend), type, y, plot, callback, v, page);
     }
-
-
-
-
 
 }

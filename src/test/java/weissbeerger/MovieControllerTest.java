@@ -112,18 +112,18 @@ public class MovieControllerTest {
 
     @Test
     public void checkFileIsExists() throws Exception {
-        mockServer.expect(requestTo("http://www.omdbapi.com/?apikey=d9a1a503&s=stam"))
+        mockServer.expect(requestTo("http://www.omdbapi.com/?apikey=d9a1a503&t=stam"))
                 .andExpect(method(HttpMethod.GET))
                 .andRespond(withSuccess("{\"Response\":\"False\",\"Error\":\"Movie not found!\"}", MediaType.APPLICATION_JSON));
-        ResponseEntity<String> response = template.getForEntity("http://localhost:"+port+"/getMovie?name=stam",
+        ResponseEntity<String> response = template.getForEntity("http://localhost:"+port+"/getMovie?name=stam&typeToSend=t",
                 String.class);
         assertThat(response.getBody(), equalTo("OMDB Error"));
         String fileName = env.getProperty("path.for.file") + "stam.xml";
         File file = new File(fileName);
         assertFalse (!file.exists() && file.isDirectory());
-        response = template.getForEntity("http://localhost:"+port+"/getMovie?name=stam",
+        response = template.getForEntity("http://localhost:"+port+"/getMovie?name=stam&typeToSend=t",
                 String.class);
-        assertThat(response.getBody(), equalTo("Success"));
+        assertThat(response.getBody(), equalTo("Success - we have this movie allready in the file system"));
         file.delete();
     }
 

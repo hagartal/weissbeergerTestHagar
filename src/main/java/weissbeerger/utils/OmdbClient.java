@@ -12,7 +12,8 @@ import weissbeerger.entity.Search;
 import weissbeerger.entity.TypeToSend;
 
 import javax.xml.bind.JAXBException;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 @Component
 public class OmdbClient {
@@ -32,9 +33,10 @@ public class OmdbClient {
     CreateXml createXml;
 
 
-    public ResponseEntity<String> getMovieFromSite(String name, String fileName, TypeToSend typeToSend, String type, String y, String plot, String callback, String v, String page) {
+    public ResponseEntity<String> getMovieFromSiteAndCreateXml(String name, TypeToSend typeToSend, String type, String y, String plot, String callback, String v, String page) {
+        //Building the url
         String urlStr = createUrl(name, typeToSend, type, y, plot, callback, v, page);
-        return getMovieFromSite(name, typeToSend, fileName, urlStr);
+        return getMovieFromSiteAndCreateXml(name, typeToSend, urlStr);
     }
 
 
@@ -68,14 +70,12 @@ public class OmdbClient {
             urlBuffer.append("&page=");
             urlBuffer.append(page);
         }
-
         return urlBuffer.toString();
     }
 
 
-    private ResponseEntity<String> getMovieFromSite(String name, TypeToSend typeToSend, String fileName, String urlStr) {
-        String movieStr = restTemplate.getForObject(
-                urlStr, String.class);
+    private ResponseEntity<String> getMovieFromSiteAndCreateXml(String name, TypeToSend typeToSend, String urlStr) {
+        String movieStr = restTemplate.getForObject(urlStr, String.class);
         Movie movieRequest = new Movie();
         Search search = new Search();
         if (!movieStr.equals(OMDB_ERROR)) {
@@ -84,12 +84,19 @@ public class OmdbClient {
             } else {
                 movieRequest = gson.fromJson(movieStr, Movie.class);
             }
+        }else{
+            movieRequest.setTitle(name);
+            if (typeToSend == TypeToSend.s) {
+                List<Movie> movieList = new ArrayList<>();
+                movieList.add(movieRequest);
+                search.setSearch(movieList);
+            }
         }
         try {
             if (typeToSend == TypeToSend.s) {
-                createXml.createXml(search, fileName);
+                createXml.createXml(search);
             } else {
-                createXml.createXml(movieRequest, fileName);
+                createXml.createXml(movieRequest);
             }
         } catch (JAXBException e) {
             return new ResponseEntity<String>("Some error creating xml", HttpStatus.INTERNAL_SERVER_ERROR);
