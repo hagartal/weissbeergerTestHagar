@@ -19,7 +19,11 @@ public class CreateXml {
     @Autowired
     Environment env;
 
-    public void createXml(Movie movieRequest) throws JAXBException {
+    public void createXml(Movie movieRequest) throws JAXBException, NullPointerException {
+        if(movieRequest == null || movieRequest.getTitle() == null){
+            logger.error("Movie object is null - can not create xml.");
+            throw new NullPointerException();
+        }
         String fileName = env.getProperty("path.for.file") + movieRequest.getTitle() + ".xml";
         logger.info("start to create xml: " +fileName);
         if (!fileExists(fileName)) {

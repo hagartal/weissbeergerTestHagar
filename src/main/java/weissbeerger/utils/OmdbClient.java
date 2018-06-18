@@ -82,34 +82,39 @@ public class OmdbClient {
     private ResponseEntity<String> getMovieFromSiteAndCreateXml(String name, TypeToSend typeToSend, String urlStr) {
         logger.info("Send request to OMDB API");
         String movieStr = restTemplate.getForObject(urlStr, String.class);
-        Movie movieRequest = new Movie();
-        Search search = new Search();
-        if (!movieStr.equals(OMDB_ERROR)) {
-            if (typeToSend == TypeToSend.s) {
-                search = gson.fromJson(movieStr, search.getClass());
-            } else {
-                movieRequest = gson.fromJson(movieStr, Movie.class);
-            }
-        }else{
-            movieRequest.setTitle(name);
-            if (typeToSend == TypeToSend.s) {
-                List<Movie> movieList = new ArrayList<>();
-                movieList.add(movieRequest);
-                search.setSearch(movieList);
-            }
-        }
         try {
-            if (typeToSend == TypeToSend.s) {
-                createXml.createXml(search);
-            } else {
-                createXml.createXml(movieRequest);
+            if (movieStr.equals(OMDB_ERROR)) {
+                parseAndCreateEmptyFile(name);
             }
-        } catch (JAXBException e) {
-            logger.error("error occurred while trying to create a new xml, the error: "+ e.getMessage());
+            else if (typeToSend == TypeToSend.s) {
+                parseAndCreateSerchXml(movieStr);
+            } else {
+                parseAndCreateXml(movieStr);
+            }
+        } catch (JAXBException | NullPointerException e) {
+            logger.error("error occurred while trying to create a new xml, the error: " + e.getMessage());
             return new ResponseEntity<String>("Some error creating xml", HttpStatus.INTERNAL_SERVER_ERROR);
         }
         logger.info("Finished the call to OMDB API.");
         return movieStr.contains(OMDB_ERROR) ? new ResponseEntity<String>("OMDB Error", HttpStatus.CREATED) : new ResponseEntity<String>("Success with new call to OMDB", HttpStatus.CREATED);
+    }
+
+    private void parseAndCreateEmptyFile(String name) throws JAXBException {
+        Movie movieRequest = new Movie();
+        movieRequest.setTitle(name);
+        createXml.createXml(movieRequest);
+    }
+
+    private void parseAndCreateXml(String movieStr) throws JAXBException {
+        Movie movieRequest = new Movie();
+        movieRequest = gson.fromJson(movieStr, Movie.class);
+        createXml.createXml(movieRequest);
+    }
+
+    private void parseAndCreateSerchXml(String movieStr) throws JAXBException {
+        Search search = new Search();
+        search = gson.fromJson(movieStr, search.getClass());
+        createXml.createXml(search);
     }
 
 
@@ -133,7 +138,7 @@ public class OmdbClient {
         if (v != null && !isInteger(v)) {
             return false;
         }
-        if(page != null && !isInteger(page)){
+        if (page != null && !isInteger(page)) {
             return false;
         }
         return true;
