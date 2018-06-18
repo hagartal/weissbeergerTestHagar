@@ -1,5 +1,6 @@
 package weissbeerger.controller;
 
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
@@ -16,6 +17,7 @@ import java.io.File;
 @Controller
 public class MovieController {
 
+    final static Logger logger = Logger.getLogger(MovieController.class);
     @Autowired
     Environment env;
 
@@ -36,11 +38,13 @@ public class MovieController {
             , @RequestParam(name = "v", required = false) String v
             , @RequestParam(name = "page", required = false) String page) {
 
+        logger.info("controller - get the movie: "+ name);
         if (!omdbClient.inputValidation(name, typeToSend, type, y, plot, callback, v, page)) {
             return new ResponseEntity<String>("Invalid input", HttpStatus.BAD_REQUEST);
         }
         String fileName = env.getProperty("path.for.file") + name + ".xml";
         if (!typeToSend.equals("s") && createXml.fileExists(fileName)) {
+            logger.info("we have this movie allready in the file system");
             return new ResponseEntity<String>("Success - we have this movie allready in the file system", HttpStatus.CREATED);
         }
         //we don't have this movie in the file system - we will search it in omdb API.

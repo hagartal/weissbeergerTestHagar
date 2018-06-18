@@ -1,6 +1,7 @@
 package weissbeerger.utils;
 
 import com.google.gson.Gson;
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
@@ -17,6 +18,8 @@ import java.util.List;
 
 @Component
 public class OmdbClient {
+
+    final static Logger logger = Logger.getLogger(OmdbClient.class);
 
     private final static String URL_OMDB = "http://www.omdbapi.com/?apikey=d9a1a503&";
     private final static String URL_OMDB_I = "i=";
@@ -41,6 +44,7 @@ public class OmdbClient {
 
 
     private String createUrl(String name, TypeToSend typeToSend, String type, String y, String plot, String callback, String v, String page) {
+        logger.info("creating URL to send to OMDB");
         String typeToSendStr = typeToSend == TypeToSend.t ? URL_OMDB_T : (typeToSend == TypeToSend.i ? URL_OMDB_I : URL_OMDB_S);
         StringBuffer urlBuffer = new StringBuffer();
         urlBuffer.append(URL_OMDB);
@@ -70,11 +74,13 @@ public class OmdbClient {
             urlBuffer.append("&page=");
             urlBuffer.append(page);
         }
+        logger.info(urlBuffer.toString() + " the url we will use to invoke OMDB API.");
         return urlBuffer.toString();
     }
 
 
     private ResponseEntity<String> getMovieFromSiteAndCreateXml(String name, TypeToSend typeToSend, String urlStr) {
+        logger.info("Send request to OMDB API");
         String movieStr = restTemplate.getForObject(urlStr, String.class);
         Movie movieRequest = new Movie();
         Search search = new Search();
@@ -99,13 +105,16 @@ public class OmdbClient {
                 createXml.createXml(movieRequest);
             }
         } catch (JAXBException e) {
+            logger.error("error occurred while trying to create a new xml, the error: "+ e.getMessage());
             return new ResponseEntity<String>("Some error creating xml", HttpStatus.INTERNAL_SERVER_ERROR);
         }
+        logger.info("Finished the call to OMDB API.");
         return movieStr.contains(OMDB_ERROR) ? new ResponseEntity<String>("OMDB Error", HttpStatus.CREATED) : new ResponseEntity<String>("Success with new call to OMDB", HttpStatus.CREATED);
     }
 
 
     public boolean inputValidation(String name, String typeToSend, String type, String y, String plot, String callback, String v, String page) {
+        logger.info("Input validation.");
         if (name == null) {
             return false;
         }

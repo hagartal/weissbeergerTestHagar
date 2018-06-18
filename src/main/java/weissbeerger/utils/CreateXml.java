@@ -1,5 +1,6 @@
 package weissbeerger.utils;
 
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
@@ -14,11 +15,13 @@ import java.io.File;
 @Component
 public class CreateXml {
 
+    final static Logger logger = Logger.getLogger(CreateXml.class);
     @Autowired
     Environment env;
 
     public void createXml(Movie movieRequest) throws JAXBException {
         String fileName = env.getProperty("path.for.file") + movieRequest.getTitle() + ".xml";
+        logger.info("start to create xml: " +fileName);
         if (!fileExists(fileName)) {
             File file = new File(fileName);
             JAXBContext jaxbContext = JAXBContext.newInstance(Movie.class);
@@ -26,6 +29,7 @@ public class CreateXml {
             jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
             jaxbMarshaller.marshal(movieRequest, file);
         }
+        logger.info(fileName + " file was created.");
     }
 
     public void createXml(Search movieSearchRequest) throws JAXBException {
@@ -33,7 +37,7 @@ public class CreateXml {
             try {
                 createXml(movie);
             } catch (JAXBException e) {
-                e.printStackTrace();
+                logger.error("error occurred while trying to create a new xml: "+ movie.getTitle() + " the error: "+ e.getMessage());
             }
         });
     }
