@@ -41,7 +41,7 @@ public class OmdbClient {
     }
 
 
-    private String createUrl(String name, TypeToSend typeToSend, String type, String y, String plot, String callback, String v, String page) {
+    public String createUrl(String name, TypeToSend typeToSend, String type, String y, String plot, String callback, String v, String page) {
         logger.info("creating URL to send to OMDB");
         String typeToSendStr = typeToSend == TypeToSend.t ? URL_OMDB_T : (typeToSend == TypeToSend.i ? URL_OMDB_I : URL_OMDB_S);
         StringBuilder urlBuilder = new StringBuilder();
@@ -77,7 +77,7 @@ public class OmdbClient {
     }
 
 
-    private ResponseEntity<String> getMovieFromSiteAndCreateXml(String name, TypeToSend typeToSend, String urlStr) {
+    public ResponseEntity<String> getMovieFromSiteAndCreateXml(String name, TypeToSend typeToSend, String urlStr) {
         logger.info("Send request to OMDB API");
         String movieStr = restTemplate.getForObject(urlStr, String.class);
         try {

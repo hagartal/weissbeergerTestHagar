@@ -12,6 +12,9 @@ import weissbeerger.entity.TypeToSend;
 import weissbeerger.utils.CreateXml;
 import weissbeerger.utils.OmdbClient;
 
+import java.util.HashSet;
+import java.util.Set;
+
 @Controller
 public class MovieController {
 
@@ -25,6 +28,7 @@ public class MovieController {
     @Autowired
     private CreateXml createXml;
 
+    private Set<String> urlHistory = new HashSet<>();
 
     @GetMapping(value = "/getMovie")
     public ResponseEntity<String> getMovie(@RequestParam(name = "name") String name
@@ -41,12 +45,14 @@ public class MovieController {
             return new ResponseEntity<String>("Invalid input", HttpStatus.BAD_REQUEST);
         }
         String fileName = env.getProperty("path.for.file") + name + ".xml";
-        if (!typeToSend.equals("s") && createXml.fileExists(fileName)) {
-            logger.info("we have this movie allready in the file system");
-            return new ResponseEntity<String>("Success - we have this movie allready in the file system", HttpStatus.CREATED);
+        String urlStr = omdbClient.createUrl(name, TypeToSend.valueOf(typeToSend), type, y, plot, callback, v, page);
+        if (urlHistory.contains(urlStr)) {
+            logger.info("we have this movie already in the file system");
+            return new ResponseEntity<String>("Success - we have already search for this Moive", HttpStatus.CREATED);
         }
         //we don't have this movie in the file system - we will search it in omdb API.
-        return omdbClient.getMovieFromSiteAndCreateXml(name, TypeToSend.valueOf(typeToSend), type, y, plot, callback, v, page);
+        urlHistory.add(urlStr);
+        return omdbClient.getMovieFromSiteAndCreateXml(name, TypeToSend.valueOf(typeToSend),urlStr);
     }
 
 }
