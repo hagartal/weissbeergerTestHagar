@@ -12,20 +12,18 @@ import weissbeerger.entity.TypeToSend;
 import weissbeerger.utils.CreateXml;
 import weissbeerger.utils.OmdbClient;
 
-import java.io.File;
-
 @Controller
 public class MovieController {
 
-    final static Logger logger = Logger.getLogger(MovieController.class);
+    private final static Logger logger = Logger.getLogger(MovieController.class);
     @Autowired
-    Environment env;
+    private Environment env;
 
     @Autowired
-    OmdbClient omdbClient;
+    private OmdbClient omdbClient;
 
     @Autowired
-    CreateXml createXml;
+    private CreateXml createXml;
 
 
     @GetMapping(value = "/getMovie")

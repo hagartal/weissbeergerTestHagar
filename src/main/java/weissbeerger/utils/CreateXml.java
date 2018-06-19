@@ -15,9 +15,9 @@ import java.io.File;
 @Component
 public class CreateXml {
 
-    final static Logger logger = Logger.getLogger(CreateXml.class);
+    private final static Logger logger = Logger.getLogger(CreateXml.class);
     @Autowired
-    Environment env;
+    private Environment env;
 
     public void createXml(Movie movieRequest) throws JAXBException, NullPointerException {
         if(movieRequest == null || movieRequest.getTitle() == null){

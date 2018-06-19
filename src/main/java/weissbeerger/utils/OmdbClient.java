@@ -13,13 +13,11 @@ import weissbeerger.entity.Search;
 import weissbeerger.entity.TypeToSend;
 
 import javax.xml.bind.JAXBException;
-import java.util.ArrayList;
-import java.util.List;
 
 @Component
 public class OmdbClient {
 
-    final static Logger logger = Logger.getLogger(OmdbClient.class);
+    private final static Logger logger = Logger.getLogger(OmdbClient.class);
 
     private final static String URL_OMDB = "http://www.omdbapi.com/?apikey=d9a1a503&";
     private final static String URL_OMDB_I = "i=";
@@ -27,13 +25,13 @@ public class OmdbClient {
     private final static String URL_OMDB_S = "s=";
     private final static String OMDB_ERROR = "{\"Response\":\"False\",\"Error\":\"Movie not found!\"}";
     private RestTemplate restTemplate = new RestTemplate();
-    Gson gson = new Gson();
+    private Gson gson = new Gson();
 
     @Autowired
-    Environment env;
+    private Environment env;
 
     @Autowired
-    CreateXml createXml;
+    private CreateXml createXml;
 
 
     public ResponseEntity<String> getMovieFromSiteAndCreateXml(String name, TypeToSend typeToSend, String type, String y, String plot, String callback, String v, String page) {
@@ -46,36 +44,36 @@ public class OmdbClient {
     private String createUrl(String name, TypeToSend typeToSend, String type, String y, String plot, String callback, String v, String page) {
         logger.info("creating URL to send to OMDB");
         String typeToSendStr = typeToSend == TypeToSend.t ? URL_OMDB_T : (typeToSend == TypeToSend.i ? URL_OMDB_I : URL_OMDB_S);
-        StringBuffer urlBuffer = new StringBuffer();
-        urlBuffer.append(URL_OMDB);
-        urlBuffer.append(typeToSendStr);
-        urlBuffer.append(name);
+        StringBuilder urlBuilder = new StringBuilder();
+        urlBuilder.append(URL_OMDB);
+        urlBuilder.append(typeToSendStr);
+        urlBuilder.append(name);
         if (type != null) {
-            urlBuffer.append("&type=");
-            urlBuffer.append(type);
+            urlBuilder.append("&type=");
+            urlBuilder.append(type);
         }
         if (y != null) {
-            urlBuffer.append("&y=");
-            urlBuffer.append(y);
+            urlBuilder.append("&y=");
+            urlBuilder.append(y);
         }
         if (plot != null) {
-            urlBuffer.append("&plot=");
-            urlBuffer.append(plot);
+            urlBuilder.append("&plot=");
+            urlBuilder.append(plot);
+        }
+        if (v != null) {
+            urlBuilder.append("&v=");
+            urlBuilder.append(v);
         }
         if (callback != null) {
-            urlBuffer.append("&callback=");
-            urlBuffer.append(callback);
+            urlBuilder.append("&callback=");
+            urlBuilder.append(callback);
         }
-        if (callback != null) {
-            urlBuffer.append("&callback=");
-            urlBuffer.append(callback);
+        if (typeToSend == TypeToSend.s && page != null) {
+            urlBuilder.append("&page=");
+            urlBuilder.append(page);
         }
-        if (typeToSend.equals("s") && page != null) {
-            urlBuffer.append("&page=");
-            urlBuffer.append(page);
-        }
-        logger.info(urlBuffer.toString() + " the url we will use to invoke OMDB API.");
-        return urlBuffer.toString();
+        logger.info(urlBuilder.toString() + " the url we will use to invoke OMDB API.");
+        return urlBuilder.toString();
     }
 
 
@@ -106,14 +104,12 @@ public class OmdbClient {
     }
 
     private void parseAndCreateXml(String movieStr) throws JAXBException {
-        Movie movieRequest = new Movie();
-        movieRequest = gson.fromJson(movieStr, Movie.class);
+        Movie movieRequest = gson.fromJson(movieStr, Movie.class);
         createXml.createXml(movieRequest);
     }
 
     private void parseAndCreateSerchXml(String movieStr) throws JAXBException {
-        Search search = new Search();
-        search = gson.fromJson(movieStr, search.getClass());
+        Search search = gson.fromJson(movieStr, Search.class);
         createXml.createXml(search);
     }
 
