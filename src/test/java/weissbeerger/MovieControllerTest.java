@@ -127,6 +127,23 @@ public class MovieControllerTest {
         file.delete();
     }
 
+    @Test
+    public void dontCheckFileInFileSystem() throws Exception {
+        mockServer.expect(requestTo("http://www.omdbapi.com/?apikey=d9a1a503&t=stam"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withSuccess("{\"Response\":\"False\",\"Error\":\"Movie not found!\"}", MediaType.APPLICATION_JSON));
+        ResponseEntity<String> response = template.getForEntity("http://localhost:"+port+"/getMovie?name=stam",
+                String.class);
+        assertThat(response.getBody(), equalTo("OMDB Error"));
+        String fileName = env.getProperty("path.for.file") + "stam.xml";
+        File file = new File(fileName);
+        assertFalse (!file.exists() && file.isDirectory());
+        response = template.getForEntity("http://localhost:"+port+"/getMovie?name=stam",
+                String.class);
+        assertThat(response.getBody(), equalTo("OMDB Error"));
+        file.delete();
+    }
+
 
 
 
